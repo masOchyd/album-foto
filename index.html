@@ -221,18 +221,19 @@
 
         /* Kartu Foto & Tombol Hapus */
         .photo-card {
-            position: relative; /* Wajib ada untuk posisi tombol hapus */
+            position: relative;
             background: #ffffff;
             border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 8px 16px rgba(255, 182, 193, 0.3);
+            box-shadow: 0 8px 166px rgba(255, 182, 193, 0.3);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             border: 3px solid #FFE4E1;
+            box-shadow: 0 8px 16px rgba(255, 182, 193, 0.2);
         }
 
         .photo-card:hover {
             transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 12px 24px rgba(255, 182, 193, 0.5);
+            box-shadow: 0 12px 24px rgba(255, 182, 193, 0.4);
         }
 
         .photo-card img {
@@ -250,7 +251,6 @@
             color: #6B6B6B;
         }
 
-        /* Desain Tombol Hapus Imut */
         .delete-btn {
             position: absolute;
             top: 12px;
@@ -282,9 +282,9 @@
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(255, 240, 245, 0.8); /* Pink transparan */
+            background-color: rgba(255, 240, 245, 0.8);
             backdrop-filter: blur(5px);
-            display: none; /* Sembunyi secara default */
+            display: none;
             align-items: center;
             justify-content: center;
             z-index: 2000;
@@ -334,7 +334,6 @@
             font-size: 0.95rem;
         }
         .profile-details div { margin-bottom: 8px; }
-        .profile-details div:last-child { margin-bottom: 0; }
 
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
@@ -375,11 +374,10 @@
 
         <div class="header">
             <h1>🌸 My Memory Box 🌸</h1>
-            <p>Haii .. Upload Foto Kamu Disini Yaa Cantik ✨</p>
+            <p>Tempat menyimpan momen-momen paling berharga acuu ✨</p>
         </div>
 
         <div class="gallery-container" id="galleryContainer">
-            
             <div class="upload-card" onclick="document.getElementById('fileInput').click()">
                 <div class="upload-icon">📸</div>
                 <div class="upload-text">Tambah Foto Baru</div>
@@ -387,16 +385,11 @@
                 <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
             </div>
 
+            <div id="dynamicPhotos" style="display: contents;"></div>
+
             <div class="photo-card">
-                <button class="delete-btn" onclick="deletePhoto(this)">🗑️</button>
                 <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500" alt="Momen 1">
-                <div class="photo-caption">Hari yang Manis ✨</div>
-            </div>
-            
-            <div class="photo-card">
-                <button class="delete-btn" onclick="deletePhoto(this)">🗑️</button>
-                <img src="https://images.unsplash.com/photo-1516627145497-ae6968895b74?w=500" alt="Momen 2">
-                <div class="photo-caption">Jalan-jalan Sore 🍰</div>
+                <div class="photo-caption">Hari yang Manis ✨ (Contoh)</div>
             </div>
         </div>
     </div>
@@ -406,19 +399,22 @@
             <div class="close-modal" onclick="closeProfile()">×</div>
             <div class="profile-avatar">👑</div>
             <h3 id="profileName">Nama User</h3>
-            <p class="profile-bio">✨ Kolektor memori indah & momen-momen acuu ✨</p>
+            <p class="profile-bio">✨ Koleksi memori indah & momen-momen acuu ✨</p>
             <div class="profile-details">
                 <div><strong>Status Akun:</strong> Pemilik Box Paling Cantik 🌸</div>
-                <div><strong>Kapasitas Box:</strong> Unlimited ☁️</div>
+                <div><strong>Kapasitas Box:</strong> Unlimited Pokoknya ☁️</div>
                 <div><strong>Tipe Enkripsi:</strong> Kasih Sayang 💕</div>
             </div>
         </div>
     </div>
 
     <script>
+        let currentUser = ""; // Menyimpan nama user yang sedang login
+
         // Fungsi mengecek Login
         function checkLogin() {
-            const username = document.getElementById('usernameInput').value.trim();
+            const username = document.getElementById('usernameInput').value.trim().toLowerCase();
+            const originalName = document.getElementById('usernameInput').value.trim();
             const password = document.getElementById('passwordInput').value;
             const loginCard = document.getElementById('loginCard');
             const mainContent = document.getElementById('mainContent');
@@ -426,32 +422,52 @@
             const toast = document.getElementById('welcomeToast');
             const toastUser = document.getElementById('toastUser');
 
-            if (username === "") {
+            if (originalName === "") {
                 alert("Isi nama panggilan kamu dulu yaa 🥺");
                 return;
             }
 
             if (password === 'maysillacute') { 
+                currentUser = username; // Set user aktif
                 loginCard.style.display = 'none';
                 document.body.style.justifyContent = 'flex-start';
                 mainContent.style.display = 'block';
                 
-                // Sinkronisasi Nama ke Toast & Modal Profil
-                toastUser.innerText = username;
-                document.getElementById('profileName').innerText = username;
+                toastUser.innerText = originalName;
+                document.getElementById('profileName').innerText = originalName;
                 
-                toast.classList.add('show');
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                }, 4000);
+                // Ambil & Tampilkan foto yang pernah disimpan oleh user ini
+                renderStoredPhotos();
 
+                toast.classList.add('show');
+                setTimeout(() => { toast.classList.remove('show'); }, 4000);
             } else {
                 errorMsg.style.display = 'block';
                 document.getElementById('passwordInput').value = '';
             }
         }
 
-        // Fungsi Menangani Upload Foto Baru
+        // Fungsi Mengambil & Menampilkan foto dari LocalStorage
+        function renderStoredPhotos() {
+            const dynamicPhotosContainer = document.getElementById('dynamicPhotos');
+            dynamicPhotosContainer.innerHTML = ""; // Bersihkan tampilan lama
+
+            // Ambil data array foto milik user saat ini
+            const savedPhotos = JSON.parse(localStorage.getItem('photos_' + currentUser)) || [];
+
+            savedPhotos.forEach(photo => {
+                const newCard = document.createElement('div');
+                newCard.className = 'photo-card';
+                newCard.innerHTML = `
+                    <button class="delete-btn" onclick="deletePhoto('${photo.id}')">🗑️</button>
+                    <img src="${photo.src}" alt="Foto">
+                    <div class="photo-caption">${photo.caption}</div>
+                `;
+                dynamicPhotosContainer.appendChild(newCard);
+            });
+        }
+
+        // Fungsi Menangani Upload Foto Baru & Menyimpannya secara Permanen
         function handleImageUpload(event) {
             const files = event.target.files;
             if (!files || files.length === 0) return;
@@ -463,50 +479,52 @@
                 const imageUrl = e.target.result;
                 const caption = prompt("Tulis catatan/caption lucu untuk foto ini: 🌸") || "Momen Bahagia 💕";
 
-                const galleryContainer = document.getElementById('galleryContainer');
-                const newCard = document.createElement('div');
-                newCard.className = 'photo-card';
-                
-                // Ditambahkan tombol delete-btn di struktur kartu baru
-                newCard.innerHTML = `
-                    <button class="delete-btn" onclick="deletePhoto(this)">🗑️</button>
-                    <img src="${imageUrl}" alt="Foto Upload">
-                    <div class="photo-caption">${caption}</div>
-                `;
+                // Struktur data foto baru
+                const newPhotoObject = {
+                    id: 'photo_' + Date.now(), // ID unik berbasis waktu
+                    src: imageUrl,
+                    caption: caption
+                };
 
-                galleryContainer.insertBefore(newCard, galleryContainer.children[1]);
+                // Ambil data lama, tambahkan data baru ke paling atas array
+                const savedPhotos = JSON.parse(localStorage.getItem('photos_' + currentUser)) || [];
+                savedPhotos.unshift(newPhotoObject);
+
+                // Simpan kembali ke LocalStorage browser
+                localStorage.setItem('photos_' + currentUser, JSON.stringify(savedPhotos));
+
+                // Gambar ulang galeri
+                renderStoredPhotos();
             };
 
             reader.readAsDataURL(file);
         }
 
-        // Fungsi Menghapus Foto
-        function deletePhoto(buttonElement) {
-            // Menampilkan dialog konfirmasi imut
-            const setuju = confirm("Apakah kamu yakin ingin menghapus foto manis ini dari kotak memori? 🥺💔");
+        // Fungsi Menghapus Foto secara Permanen dari LocalStorage
+        function deletePhoto(photoId) {
+            const setuju = confirm("Apakah kamu yakin ingin menghapus foto manis ini dari kotak memori secara permanen? 🥺💔");
             if (setuju) {
-                // Mencari elemen .photo-card terdekat dari tombol yang diklik dan menghapusnya
-                const card = buttonElement.closest('.photo-card');
-                card.remove();
+                let savedPhotos = JSON.parse(localStorage.getItem('photos_' + currentUser)) || [];
+                
+                // Saring array, buang foto yang memiliki ID yang cocok
+                savedPhotos = savedPhotos.filter(photo => photo.id !== photoId);
+
+                // Simpan kembali array yang sudah bersih ke LocalStorage
+                localStorage.setItem('photos_' + currentUser, JSON.stringify(savedPhotos));
+
+                // Gambar ulang galeri agar foto hilang dari layar
+                renderStoredPhotos();
             }
         }
 
-        // Fungsi Pengaturan Profil (Buka/Tutup Modal)
-        function openProfile() {
-            document.getElementById('profileModal').style.display = 'flex';
-        }
+        // Fungsi Pengaturan Profil
+        function openProfile() { document.getElementById('profileModal').style.display = 'flex'; }
+        function closeProfile() { document.getElementById('profileModal').style.display = 'none'; }
 
-        function closeProfile() {
-            document.getElementById('profileModal').style.display = 'none';
-        }
-
-        // Jalankan login kalau pencet tombol Enter
+        // Enter key listener untuk login
         document.getElementById('passwordInput').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                checkLogin();
-            }
+            if (e.key === 'Enter') { checkLogin(); }
         });
     </script>
-
 </body>
 </html>
